@@ -305,7 +305,7 @@
         const DOWNLOAD_URL = window.location.hostname.includes('github.io')
             ? 'https://github.com/sudeenjain/AbhimoTracker/releases/download/v1.0.0/AbhimoTracker-Employee-Setup.exe'
             : 'downloads/AbhimoTracker-Employee-Setup.exe';
-        const API_BASE = window.__ABHIMO_API_BASE__ || 'http://localhost:8080';
+        const API_BASE = window.__ABHIMO_API_BASE__ || 'http://localhost/attendance-system/backend/public';
 
         const token = new URLSearchParams(window.location.search).get('token');
 
@@ -357,7 +357,7 @@
         }
 
         document.getElementById('downloadBtn').addEventListener('click', () => {
-            triggerDownload(DOWNLOAD_URL, 'AbhimoTracker-Employee.zip');
+            triggerDownload(DOWNLOAD_URL, 'AbhimoTracker-Employee-Setup.exe');
             document.getElementById('downloadedBadge').style.display = 'block';
         });
 

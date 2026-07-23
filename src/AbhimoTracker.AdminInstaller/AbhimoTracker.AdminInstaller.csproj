@@ -6,6 +6,9 @@
     <ApplicationVisualStyles>true</ApplicationVisualStyles>
     <AssemblyName>AbhimoTrackerAdminSetup</AssemblyName>
     <Nullable>enable</Nullable>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
   </PropertyGroup>
 
   <ItemGroup>

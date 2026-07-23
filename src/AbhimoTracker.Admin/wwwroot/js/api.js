@@ -6,8 +6,22 @@
 // window.__ABHIMO_API_BASE__ lets the Admin app (AbhimoTracker.Admin) inject
 // a real per-environment API base at runtime via WebView2's
 // AddScriptToExecuteOnDocumentCreatedAsync, instead of needing a separate
-// build of this file per deployment -- see MainWindow.xaml.cs.
-const API_BASE = window.__ABHIMO_API_BASE__ || 'http://localhost:8080';
+function resolveApiBase() {
+  if (window.__ABHIMO_API_BASE__) return window.__ABHIMO_API_BASE__;
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const apiParam = urlParams.get('api');
+    if (apiParam) return apiParam;
+  } catch (e) {}
+
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return 'http://localhost/attendance-system/backend/public';
+  }
+
+  return 'http://localhost/attendance-system/backend/public';
+}
+
+const API_BASE = resolveApiBase();
 
 function authHeaders() {
   const token = localStorage.getItem('auth_token');
