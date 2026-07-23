@@ -5,9 +5,12 @@ backend/.env
 credentials.dpapi
 crash.log
 
-# Build Outputs, Binaries, Node Modules, and Packages
+# Build Outputs, Binaries, Node Modules, Vendor, and Packages
 node_modules/
 [Nn]ode_modules/
+vendor/
+[Vv]endor/
+backend/vendor/
 [Bb]in/
 [Oo]bj/
 [Pp]ublish/
