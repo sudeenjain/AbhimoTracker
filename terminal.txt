@@ -9,3 +9,14 @@ cd P:\AbhimoTracker\publish\Employee
 # Terminal 3: Administrator Console (WebView2 App)
 cd P:\AbhimoTracker\publish\Admin
 .\AbhimoTracker.Admin.exe
+
+https://sudeenjain.github.io/AbhimoTracker/register.html
+
+ChangeMe123!
+
+DB_HOST = gateway01.ap-southeast-1.prod.aws.tidbcloud.com
+DB_PORT = 4000
+DB_USER = 3bK2gQQjifMCncz.root
+DB_PASS = 7JFX8OlaGOFiFV6v
+DATABASE:sys
+
