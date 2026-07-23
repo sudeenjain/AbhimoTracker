@@ -1,4 +1,4 @@
-# Environment & Secret files (DO NOT COMMIT)
+﻿# Environment & Secret files (DO NOT COMMIT)
 .env
 *.env
 backend/.env
