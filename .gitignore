@@ -1,0 +1,47 @@
+# Environment & Secret files (DO NOT COMMIT)
+.env
+*.env
+backend/.env
+credentials.dpapi
+crash.log
+
+# Build Outputs, Binaries, Node Modules, and Packages
+node_modules/
+[Nn]ode_modules/
+[Bb]in/
+[Oo]bj/
+[Pp]ublish/
+/publish/
+/dist/
+/desktop-tray/dist/
+[Dd]ist/
+/src/*/bin/
+/src/*/obj/
+/src/AbhimoTracker.Installer/Resources/app.zip
+/src/AbhimoTracker.AdminInstaller/Resources/app.zip
+
+# Individual Binary / Executables & Large Installers (>100MB)
+*.exe
+*.msi
+*.dll
+*.pdb
+/frontend/downloads/*.exe
+/frontend/downloads/AbhimoTracker-*.zip
+
+# IDE & Editor Cache
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.lock
+*.userosscache
+*.sln.docstates
+
+# System & OS Files
+[Tt]emp/
+[Tt]mp/
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/

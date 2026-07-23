@@ -1,0 +1,7 @@
+RewriteEngine On
+# Slim/Apache front-controller pattern: if the request isn't a real file
+# (an actual asset on disk), send it to index.php so the app's own router
+# can handle it. Without this, Apache 404s on every route except literally
+# "public/index.php" itself.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ index.php [QSA,L]

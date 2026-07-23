@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Sign in</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: #111827;
+      color: #f3f4f6;
+      margin: 0;
+      padding: 24px;
+    }
+
+    h1 {
+      font-size: 1.1rem;
+      margin: 0 0 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      margin: 12px 0 4px;
+      color: #9ca3af;
+    }
+
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid #374151;
+      background: #1f2937;
+      color: #f3f4f6;
+    }
+
+    button {
+      margin-top: 18px;
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: none;
+      background: #22c55e;
+      color: #052e16;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+
+    .error {
+      color: #fca5a5;
+      font-size: 0.85rem;
+      margin-top: 10px;
+      min-height: 1em;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Sign in to Attendance Tray</h1>
+  <label for="username">Username</label>
+  <input id="username" type="text" autocomplete="username">
+  <label for="password">Password</label>
+  <input id="password" type="password" autocomplete="current-password">
+  <button id="loginBtn">Log in</button>
+  <div class="error" id="err"></div>
+
+  <script>
+    const btn = document.getElementById('loginBtn');
+    const err = document.getElementById('err');
+
+    async function doLogin() {
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      if (!username || !password) {
+        err.textContent = 'Enter your username and password.';
+        return;
+      }
+      btn.disabled = true;
+      err.textContent = '';
+
+      let result;
+      try {
+        const trayApp = window.trayApp || window.attendanceTray;
+        if (trayApp && typeof trayApp.submitManualLogin === 'function') {
+          const apiBase = await trayApp.defaultApiBase();
+          result = await trayApp.submitManualLogin(username, password, apiBase);
+        } else if (trayApp && typeof trayApp.login === 'function') {
+          result = await trayApp.login(username, password);
+        } else {
+          result = { ok: false, error: 'Tray API not loaded.' };
+        }
+      } catch (e) {
+        result = { ok: false, error: e.message };
+      }
+
+      btn.disabled = false;
+      if (!result.ok) {
+        err.textContent = result.error || 'Login failed.';
+      }
+      // On success the main process closes this window itself.
+    }
+
+    btn.addEventListener('click', doLogin);
+    document.getElementById('username').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') doLogin();
+    });
+    document.getElementById('password').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') doLogin();
+    });
+  </script>
+</body>
+
+</html>

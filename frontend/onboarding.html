@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+  <div class="page">
+    <div class="card">
+
+      <div id="step-password" class="step">
+        <h1>Set a new password</h1>
+        <p class="muted">This is your first login. Choose a new password to replace the temporary one you were emailed.
+        </p>
+        <form id="passwordForm">
+          <label for="current_password">Temporary password</label>
+          <input type="password" id="current_password" required>
+
+          <label for="new_password">New password</label>
+          <input type="password" id="new_password" required minlength="8">
+          <p class="muted">At least 8 characters.</p>
+
+          <div class="actions">
+            <button type="submit" class="primary">Change password</button>
+          </div>
+        </form>
+      </div>
+
+      <div id="step-consent" class="step">
+        <h1>Monitoring policy</h1>
+        <p class="muted">Please read the policy below. You must accept it before you can use the app.</p>
+        <div class="policy-text" id="policyText">Loading...</div>
+
+        <div class="checkbox-row">
+          <input type="checkbox" id="agreeCheckbox">
+          <label for="agreeCheckbox">I have read and accept this monitoring policy.</label>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="primary" id="acceptBtn" disabled>Accept and continue</button>
+        </div>
+      </div>
+
+      <div id="step-done" class="step">
+        <h1>You're all set</h1>
+        <p class="muted">Password changed and monitoring policy accepted.</p>
+        <p class="muted" style="margin-top: 15px; font-size: 0.9rem;">Your credentials have been paired with the desktop tracker app and chrome extension. You can now close this browser tab and manage your work session directly from the tray icon.</p>
+      </div>
+
+      <div id="msg" class="msg hidden"></div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    const msg = document.getElementById('msg');
+    let currentPolicyVersion = null;
+
+    function showMsg(type, text) {
+      msg.className = `msg ${type}`;
+      msg.textContent = text;
+    }
+
+    function showStep(id) {
+      document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    async function loadPolicyAndShowConsent() {
+      const { ok, data } = await apiFetch('/api/policy/current');
+      if (!ok) {
+        showMsg('error', data.error || 'Could not load the monitoring policy.');
+        return;
+      }
+      currentPolicyVersion = data.version;
+      document.getElementById('policyText').textContent = data.content;
+      showStep('step-consent');
+    }
+
+    document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msg.className = 'msg hidden';
+
+      const payload = {
+        current_password: document.getElementById('current_password').value,
+        new_password: document.getElementById('new_password').value,
+      };
+
+      const { ok, data } = await apiFetch('/api/account/change-password', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+
+      if (!ok) {
+        showMsg('error', data.error || 'Could not change password.');
+        return;
+      }
+
+      localStorage.setItem('must_change_password', '0');
+
+      // Tray app already paired at onboarding, but its saved password just
+      // went stale. Same claim-ticket handoff as abhimo-tracker.html: this
+      // token is redeemed by the tray app's own process, not this page --
+      // the new password never appears in the abhimo:// URL itself.
+      if (data.tray_pairing_token) {
+        const trayUrl = `abhimo://pair?token=${encodeURIComponent(data.tray_pairing_token)}&api=${encodeURIComponent(API_BASE)}`;
+        window.location.href = trayUrl;
+      }
+
+      if (data.extension_pairing_token && window.chrome && chrome.runtime && chrome.runtime.sendMessage) {
+        try {
+          const EXTENSION_ID = 'caeelcihhfolngkdigjkfalhheheicba';
+          chrome.runtime.sendMessage(EXTENSION_ID, { type: 'PING' }, (ping) => {
+            void chrome.runtime.lastError;
+            if (ping && ping.installed) {
+              chrome.runtime.sendMessage(EXTENSION_ID, {
+                type: 'PAIR',
+                token: data.extension_pairing_token,
+                apiBase: API_BASE
+              }, () => {
+                void chrome.runtime.lastError;
+              });
+            }
+          });
+        } catch (e) {
+          // ignore extension errors
+        }
+      }
+
+      if (data.needs_consent) {
+        await loadPolicyAndShowConsent();
+      } else {
+        showStep('step-done');
+      }
+    });
+
+    document.getElementById('agreeCheckbox').addEventListener('change', (e) => {
+      document.getElementById('acceptBtn').disabled = !e.target.checked;
+    });
+
+    document.getElementById('acceptBtn').addEventListener('click', async () => {
+      msg.className = 'msg hidden';
+
+      const { ok, data } = await apiFetch('/api/consent/accept', {
+        method: 'POST',
+        body: JSON.stringify({ policy_version: currentPolicyVersion }),
+      });
+
+      if (!ok) {
+        showMsg('error', data.error || 'Could not record consent.');
+        return;
+      }
+
+      showStep('step-done');
+    });
+
+    // Entry point: figure out which step this employee needs.
+    (async function init() {
+      if (!localStorage.getItem('auth_token')) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      if (localStorage.getItem('must_change_password') === '1') {
+        showStep('step-password');
+        return;
+      }
+
+      await loadPolicyAndShowConsent();
+    })();
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>AbhimoTracker.Admin</RootNamespace>
+    <AssemblyName>AbhimoTracker.Admin</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Full Chromium context, same reuse principle as the master prompt's
+         original Electron BrowserWindow plan: loads the existing admin
+         HTML/CSS/JS unmodified (plus one small additive script, see
+         wwwroot/js/live-status-client.js) instead of rewriting the UI. -->
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2792.45" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="wwwroot\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,9 @@
+<Application x:Class="AbhimoTracker.Employee.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             ShutdownMode="OnExplicitShutdown">
+    <!-- OnExplicitShutdown: this is a tray app, same posture as main.js's
+         'window-all-closed' handler (e.preventDefault()): closing the
+         Dashboard window must not exit the process; only "Quit Abhimo
+         Tracker" from the tray menu does. -->
+</Application>

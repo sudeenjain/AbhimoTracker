@@ -1,0 +1,26 @@
+{
+    "name": "internal/attendance-system",
+    "description": "AI-assisted (window-title + idle only) employee attendance & activity tracking system",
+    "require": {
+        "php": ">=8.1",
+        "ext-pdo": "*",
+        "ext-json": "*",
+        "slim/slim": "^4.13",
+        "slim/psr7": "^1.7",
+        "firebase/php-jwt": "^6.10",
+        "phpmailer/phpmailer": "^6.9"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "minimum-stability": "stable",
+    "config": {
+        "policy": {
+            "advisories": {
+                "block": false
+            }
+        }
+    }
+}

@@ -1,0 +1,12 @@
+To: tester@example.com
+Subject: Welcome to Abhimo - Account Approved
+
+Hi Tester OTP,
+
+Welcome to Abhimo, use this link to login page: http://127.0.0.1:8090/login.html
+
+Your temporary login credentials are:
+  Username: tester.otp
+  Temporary password: $fFLWN7PB#*E
+
+You will be required to change this password on first login, and to review and accept the monitoring policy before using the app.

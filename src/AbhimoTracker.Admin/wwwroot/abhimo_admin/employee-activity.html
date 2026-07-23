@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abhimo Admin - Employee Activity</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        /* Small additions specific to this page only -- everything else
+           reuses card/badge/ws-grid/table/muted/empty-state from the
+           shared stylesheet so this page looks like it belongs next to
+           attendance.html, not bolted on. */
+        .timeline {
+            list-style: none;
+            margin: 10px 0 0;
+            padding: 0;
+            border-left: 2px solid var(--border);
+        }
+
+        .timeline li {
+            position: relative;
+            padding: 0 0 16px 20px;
+            font-size: 0.9rem;
+        }
+
+        .timeline li::before {
+            content: '';
+            position: absolute;
+            left: -6px;
+            top: 4px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--primary);
+        }
+
+        .timeline li.idle::before {
+            background: var(--warning);
+        }
+
+        .timeline li.sign_in::before,
+        .timeline li.sign_out::before {
+            background: var(--success);
+        }
+
+        .timeline time {
+            display: block;
+            color: var(--muted);
+            font-size: 0.78rem;
+            margin-bottom: 2px;
+        }
+
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 720px) {
+            .two-col {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Phase 12 quick filters -- same visual language as button.ghost /
+           button.primary from the shared stylesheet, just grouped tighter. */
+        .filter-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+
+        .filter-row button {
+            padding: 7px 14px;
+            font-size: 0.85rem;
+        }
+
+        .filter-row input[type="date"] {
+            width: auto;
+            max-width: 170px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .summary-grid>div {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 16px;
+            background: rgba(15, 23, 42, 0.4);
+        }
+
+        .summary-grid h3 {
+            margin: 0 0 8px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            color: var(--muted);
+        }
+
+        .summary-grid ol {
+            margin: 0;
+            padding-left: 18px;
+            font-size: 0.9rem;
+        }
+
+        .summary-grid ol li {
+            margin: 4px 0;
+        }
+
+        @media (max-width: 720px) {
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page wide">
+        <div class="card">
+            <div class="topbar">
+                <h1 id="pageTitle">Employee Activity</h1>
+                <div>
+                    <a href="attendance.html" style="margin-right: 14px;">&larr; Back to attendance</a>
+                    <button class="ghost" id="logoutBtn">Log out</button>
+                </div>
+            </div>
+
+            <div class="filter-row">
+                <button class="ghost" id="filterToday">Today</button>
+                <button class="ghost" id="filterYesterday">Yesterday</button>
+                <button class="ghost" id="filterWeek">Last 7 Days</button>
+                <label for="dateInput" style="margin: 0 0 0 6px;">Custom</label>
+                <input type="date" id="dateInput">
+            </div>
+
+            <div id="msg" class="msg hidden"></div>
+
+            <div id="content" class="hidden">
+                <div class="ws-grid" style="margin-top: 20px;">
+                    <div>
+                        <span class="muted">Status</span>
+                        <div id="statusBadgeWrap"></div>
+                    </div>
+                    <div>
+                        <span class="muted">Signed in / out</span>
+                        <div id="signInOut" style="font-size: 0.95rem;"></div>
+                    </div>
+                    <div>
+                        <span class="muted">Total session</span>
+                        <div id="totalSession"></div>
+                    </div>
+                </div>
+                <div class="ws-grid">
+                    <div>
+                        <span class="muted">Active time</span>
+                        <div id="activeTime"></div>
+                    </div>
+                    <div>
+                        <span class="muted">Idle time</span>
+                        <div id="idleTime"></div>
+                    </div>
+                    <div>
+                        <span class="muted">Most used app</span>
+                        <div id="topApp" style="font-size: 0.95rem;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Phase 11: Today's Work Summary -- most-used app/website side by
+             side, plus a top-3 shortlist of each. The full sortable tables
+             (all apps/sites, not just top 3) still live in #detailCards
+             below; this card is the "at a glance" version for whichever
+             single date is selected (not just literally today). -->
+        <div class="card hidden" id="summaryCard">
+            <h2>Work Summary</h2>
+            <div class="summary-grid">
+                <div>
+                    <span class="muted">Most used application</span>
+                    <div id="summaryTopApp" style="font-size: 1rem; font-weight: 600; margin-top: 4px;"></div>
+                </div>
+                <div>
+                    <span class="muted">Most used website</span>
+                    <div id="summaryTopSite" style="font-size: 1rem; font-weight: 600; margin-top: 4px;"></div>
+                </div>
+                <div>
+                    <h3>Top applications</h3>
+                    <ol id="summaryTopAppsList"></ol>
+                </div>
+                <div>
+                    <h3>Top websites</h3>
+                    <ol id="summaryTopSitesList"></ol>
+                </div>
+            </div>
+        </div>
+
+        <!-- Phase 12: Last 7 Days (or any custom range) -- per-day
+             active/idle breakdown plus top apps/websites aggregated across
+             the whole range. Hidden in single-date mode. -->
+        <div class="card hidden" id="rangeCard">
+            <h2 id="rangeTitle">Last 7 Days</h2>
+            <div id="rangeDaysTableWrap"></div>
+            <div class="two-col" style="margin-top: 20px;">
+                <div>
+                    <h2>Top applications</h2>
+                    <p class="muted" style="margin: 0 0 6px;">Active time, summed across the range.</p>
+                    <div id="rangeAppsTableWrap"></div>
+                </div>
+                <div>
+                    <h2>Top websites</h2>
+                    <p class="muted" style="margin: 0 0 6px;">Active time, summed across the range.</p>
+                    <div id="rangeSitesTableWrap"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card hidden" id="detailCards">
+            <div class="two-col">
+                <div>
+                    <h2>Applications used today</h2>
+                    <p class="muted" style="margin: 0 0 6px;">Foreground application only, active time only (idle excluded).</p>
+                    <div id="appsTableWrap"></div>
+                </div>
+                <div>
+                    <h2>Websites visited today</h2>
+                    <p class="muted" style="margin: 0 0 6px;">Domain only -- no page paths, no page content.</p>
+                    <div id="sitesTableWrap"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card hidden" id="timelineCard">
+            <h2>Activity timeline</h2>
+            <ul class="timeline" id="timelineList"></ul>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const employeeId = params.get('id');
+
+        const msg = document.getElementById('msg');
+        const content = document.getElementById('content');
+        const detailCards = document.getElementById('detailCards');
+        const timelineCard = document.getElementById('timelineCard');
+        const summaryCard = document.getElementById('summaryCard');
+        const rangeCard = document.getElementById('rangeCard');
+        const dateInput = document.getElementById('dateInput');
+
+        // Phase 12: 'single' shows content/summaryCard/detailCards/timelineCard
+        // for one date (today/yesterday/custom); 'range' shows rangeCard for
+        // a 7-day (or wider) window. Only one mode's cards are visible at a time.
+        let viewMode = 'single';
+        const filterButtons = {
+            today: document.getElementById('filterToday'),
+            yesterday: document.getElementById('filterYesterday'),
+            week: document.getElementById('filterWeek'),
+        };
+
+        if (!employeeId) {
+            msg.className = 'msg error';
+            msg.textContent = 'No employee selected. Go back to attendance and pick "View activity" for an employee.';
+        }
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('auth_token');
+            window.location.href = 'login.html';
+        });
+
+        function todayLocal() {
+            return new Date().toISOString().slice(0, 10);
+        }
+
+        function yesterdayLocal() {
+            const d = new Date();
+            d.setDate(d.getDate() - 1);
+            return d.toISOString().slice(0, 10);
+        }
+
+        function setActiveFilter(key) {
+            Object.entries(filterButtons).forEach(([k, btn]) => {
+                btn.className = k === key ? 'primary' : 'ghost';
+            });
+        }
+
+        function formatHms(totalSeconds) {
+            const s = Math.max(0, Math.floor(totalSeconds || 0));
+            const hh = String(Math.floor(s / 3600)).padStart(2, '0');
+            const mm = String(Math.floor((s % 3600) / 60)).padStart(2, '0');
+            const ss = String(s % 60).padStart(2, '0');
+            return `${hh}:${mm}:${ss}`;
+        }
+
+        function formatHoursMinutes(totalSeconds) {
+            const s = Math.max(0, Math.floor(totalSeconds || 0));
+            const h = Math.floor(s / 3600);
+            const m = Math.floor((s % 3600) / 60);
+            if (h === 0 && m === 0) return '0m';
+            return `${h > 0 ? h + 'h ' : ''}${m}m`;
+        }
+
+        function statusBadge(status) {
+            const cls = {
+                working: 'active', active: 'active',
+                idle: 'idle',
+                offline: 'offline', completed: 'offline',
+                not_signed_in: 'pending', absent: 'pending',
+                signed_out: 'rejected',
+            }[status] || 'offline';
+            const label = {
+                working: 'Working', active: 'Active',
+                idle: 'Idle',
+                offline: 'Offline', completed: 'Completed',
+                not_signed_in: 'Not signed in', absent: 'Absent',
+                signed_out: 'Signed out',
+            }[status] || status;
+            return `<span class="badge ${cls}">${label}</span>`;
+        }
+
+        function timelineIcon(type) {
+            const labels = { sign_in: 'Signed in', sign_out: 'Signed out', app: 'App', website: 'Website', idle: 'Idle' };
+            return labels[type] || type;
+        }
+
+        function renderTable(rows, columns) {
+            if (!rows || rows.length === 0) {
+                return '<div class="empty-state">No data tracked for this date.</div>';
+            }
+            const head = columns.map((c) => `<th>${c.label}</th>`).join('');
+            const body = rows.map((row) => `<tr>${columns.map((c) => `<td>${c.render(row)}</td>`).join('')}</tr>`).join('');
+            return `<table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+        }
+
+        async function loadActivity() {
+            if (!employeeId) return;
+            viewMode = 'single';
+            rangeCard.classList.add('hidden');
+            const date = dateInput.value || todayLocal();
+            const { ok, status, data } = await apiFetch(`/api/admin/employees/${encodeURIComponent(employeeId)}/activity?date=${date}`);
+
+            if (status === 401 || status === 403) {
+                window.location.href = 'login.html';
+                return;
+            }
+            if (!ok) {
+                msg.className = 'msg error';
+                msg.textContent = data.error || 'Failed to load employee activity.';
+                content.classList.add('hidden');
+                summaryCard.classList.add('hidden');
+                detailCards.classList.add('hidden');
+                timelineCard.classList.add('hidden');
+                return;
+            }
+
+            msg.className = 'msg hidden';
+            content.classList.remove('hidden');
+            summaryCard.classList.remove('hidden');
+            detailCards.classList.remove('hidden');
+            timelineCard.classList.remove('hidden');
+
+            document.getElementById('pageTitle').textContent = `${data.employee.name} -- Activity`;
+            document.title = `Abhimo Admin - ${data.employee.name} Activity`;
+
+            document.getElementById('statusBadgeWrap').innerHTML = statusBadge(data.attendance.status);
+            document.getElementById('signInOut').textContent =
+                `${data.attendance.sign_in_time || '--'} / ${data.attendance.sign_out_time || '--'}`;
+            document.getElementById('totalSession').textContent = formatHms(data.totals.total_session_seconds);
+            document.getElementById('activeTime').textContent = formatHms(data.totals.active_seconds);
+            document.getElementById('idleTime').textContent = formatHms(data.totals.idle_seconds);
+            document.getElementById('topApp').textContent = data.applications.length
+                ? `${data.applications[0].app} (${formatHoursMinutes(data.applications[0].total_seconds)})`
+                : 'No app data yet';
+
+            // Phase 11: Today's Work Summary -- most-used app/website plus a
+            // top-3 shortlist of each, drawn from the same already-sorted
+            // applications/websites arrays the full tables below use.
+            document.getElementById('summaryTopApp').textContent = data.applications.length
+                ? `${data.applications[0].app} -- ${formatHoursMinutes(data.applications[0].total_seconds)}`
+                : 'No app data yet';
+            document.getElementById('summaryTopSite').textContent = data.websites.length
+                ? `${data.websites[0].domain} -- ${formatHoursMinutes(data.websites[0].total_seconds)}`
+                : 'No website data yet';
+            document.getElementById('summaryTopAppsList').innerHTML = data.applications.length
+                ? data.applications.slice(0, 3).map((a) => `<li>${a.app} (${formatHoursMinutes(a.total_seconds)})</li>`).join('')
+                : '<li class="muted">No app data yet</li>';
+            document.getElementById('summaryTopSitesList').innerHTML = data.websites.length
+                ? data.websites.slice(0, 3).map((s) => `<li>${s.domain} (${formatHoursMinutes(s.total_seconds)})</li>`).join('')
+                : '<li class="muted">No website data yet</li>';
+
+            document.getElementById('appsTableWrap').innerHTML = renderTable(data.applications, [
+                { label: 'Application', render: (r) => r.app },
+                { label: 'Active time', render: (r) => formatHoursMinutes(r.total_seconds) },
+            ]);
+            document.getElementById('sitesTableWrap').innerHTML = renderTable(data.websites, [
+                { label: 'Domain', render: (r) => r.domain },
+                { label: 'Active time', render: (r) => formatHoursMinutes(r.total_seconds) },
+            ]);
+
+            const timelineList = document.getElementById('timelineList');
+            if (data.timeline.length === 0) {
+                timelineList.innerHTML = '<div class="empty-state">No activity recorded for this date.</div>';
+            } else {
+                timelineList.innerHTML = data.timeline.map((e) => {
+                    const timePart = (e.time || '').split(' ')[1] || e.time;
+                    return `<li class="${e.type}"><time>${timePart}</time>${timelineIcon(e.type)}: ${e.label}</li>`;
+                }).join('');
+            }
+        }
+
+        /** Phase 12: Last 7 Days quick filter. Hides the single-date cards
+         *  and renders the /activity/range response instead -- per-day
+         *  active/idle totals plus top apps/websites summed across the
+         *  window. Reuses renderTable() for both tables. */
+        async function loadRange() {
+            if (!employeeId) return;
+            viewMode = 'range';
+            content.classList.add('hidden');
+            summaryCard.classList.add('hidden');
+            detailCards.classList.add('hidden');
+            timelineCard.classList.add('hidden');
+
+            const { ok, status, data } = await apiFetch(`/api/admin/employees/${encodeURIComponent(employeeId)}/activity/range`);
+
+            if (status === 401 || status === 403) {
+                window.location.href = 'login.html';
+                return;
+            }
+            if (!ok) {
+                msg.className = 'msg error';
+                msg.textContent = data.error || 'Failed to load employee activity.';
+                rangeCard.classList.add('hidden');
+                return;
+            }
+
+            msg.className = 'msg hidden';
+            rangeCard.classList.remove('hidden');
+
+            document.getElementById('pageTitle').textContent = `${data.employee.name} -- Activity`;
+            document.title = `Abhimo Admin - ${data.employee.name} Activity`;
+            document.getElementById('rangeTitle').textContent = `${data.from} to ${data.to}`;
+
+            document.getElementById('rangeDaysTableWrap').innerHTML = renderTable(data.days, [
+                { label: 'Date', render: (r) => r.date },
+                { label: 'Signed in / out', render: (r) => `${r.sign_in_time || '--'} / ${r.sign_out_time || '--'}` },
+                { label: 'Active time', render: (r) => formatHoursMinutes(r.active_seconds) },
+                { label: 'Idle time', render: (r) => formatHoursMinutes(r.idle_seconds) },
+            ]);
+            document.getElementById('rangeAppsTableWrap').innerHTML = renderTable(data.applications, [
+                { label: 'Application', render: (r) => r.app },
+                { label: 'Active time', render: (r) => formatHoursMinutes(r.total_seconds) },
+            ]);
+            document.getElementById('rangeSitesTableWrap').innerHTML = renderTable(data.websites, [
+                { label: 'Domain', render: (r) => r.domain },
+                { label: 'Active time', render: (r) => formatHoursMinutes(r.total_seconds) },
+            ]);
+        }
+
+        function refresh() {
+            return viewMode === 'range' ? loadRange() : loadActivity();
+        }
+
+        filterButtons.today.addEventListener('click', () => {
+            setActiveFilter('today');
+            dateInput.value = todayLocal();
+            loadActivity();
+        });
+        filterButtons.yesterday.addEventListener('click', () => {
+            setActiveFilter('yesterday');
+            dateInput.value = yesterdayLocal();
+            loadActivity();
+        });
+        filterButtons.week.addEventListener('click', () => {
+            setActiveFilter('week');
+            loadRange();
+        });
+        dateInput.addEventListener('change', () => {
+            setActiveFilter(null); // custom date -- none of the quick buttons apply
+            loadActivity();
+        });
+
+        setActiveFilter('today');
+        dateInput.value = todayLocal();
+        loadActivity();
+
+        // Same 15s cadence as the app-usage panel on attendance.html --
+        // only meaningfully "live" when viewing today; still harmless (just
+        // a no-op refresh) when viewing a past date or range.
+        setInterval(refresh, 15000);
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr@8.0.7/dist/browser/signalr.min.js"></script>
+    <script src="../js/live-status-client.js"></script>
+</body>
+
+</html>

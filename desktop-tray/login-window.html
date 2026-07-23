@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Abhimo Tracker -- Sign in</title>
+    <style>
+        :root {
+            color-scheme: dark;
+        }
+
+        body {
+            margin: 0;
+            padding: 28px;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #0f172a;
+            color: #f8fafc;
+        }
+
+        h1 {
+            font-size: 1.1rem;
+            margin: 0 0 6px;
+        }
+
+        p {
+            color: #94a3b8;
+            font-size: 0.85rem;
+            margin: 0 0 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin-bottom: 6px;
+        }
+
+        input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 9px 10px;
+            margin-bottom: 14px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            color: #f8fafc;
+            font-size: 0.9rem;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            background: #3b82f6;
+            color: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: default;
+        }
+
+        #msg {
+            min-height: 18px;
+            font-size: 0.8rem;
+            color: #ef4444;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Sign in to Abhimo Tracker</h1>
+    <p>Use the username and password from your onboarding email if you haven't paired automatically.</p>
+
+    <label for="username">Username</label>
+    <input id="username" type="text" autofocus>
+
+    <label for="password">Password</label>
+    <input id="password" type="password">
+
+    <button id="submitBtn">Sign in</button>
+    <div id="msg"></div>
+
+    <script>
+        const msg = document.getElementById('msg');
+        const btn = document.getElementById('submitBtn');
+
+        async function doLogin() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            if (!username || !password) {
+                msg.textContent = 'Enter both username and password.';
+                return;
+            }
+            btn.disabled = true;
+            msg.style.color = '#94a3b8';
+            msg.textContent = 'Signing in...';
+
+            let result;
+            try {
+                const apiBase = await window.trayApp.defaultApiBase();
+                result = await window.trayApp.submitManualLogin(username, password, apiBase);
+            } catch (err) {
+                result = { ok: false, error: err.message || 'Could not contact desktop tray agent.' };
+            }
+
+            if (!result.ok) {
+                msg.style.color = '#ef4444';
+                msg.textContent = result.error || 'Could not sign in.';
+                btn.disabled = false;
+                return;
+            }
+            // Main process closes this window on success.
+        }
+
+        btn.addEventListener('click', doLogin);
+
+        document.getElementById('username').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') doLogin();
+        });
+
+        document.getElementById('password').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') doLogin();
+        });
+    </script>
+</body>
+
+</html>

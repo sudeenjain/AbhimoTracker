@@ -1,0 +1,412 @@
+:root {
+  --bg-gradient: radial-gradient(ellipse at top, #1e293b 0%, #0f172a 100%);
+  --card-bg: rgba(30, 41, 59, 0.68);
+  --card-bg-solid: #1e293b;
+  --border: rgba(255, 255, 255, 0.09);
+  --text: #f1f5f9;
+  --muted: #94a3b8;
+  --primary: #3b82f6;
+  --primary-dark: #2563eb;
+  --primary-glow: rgba(59, 130, 246, 0.35);
+  --danger: #f87171;
+  --success: #34d399;
+  --warning: #fb923c;
+  --radius: 12px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: var(--bg-gradient);
+  background-attachment: fixed;
+  color: var(--text);
+  min-height: 100vh;
+}
+
+.page {
+  max-width: 640px;
+  margin: 48px auto;
+  padding: 0 20px;
+}
+
+.page.wide {
+  max-width: 1080px;
+}
+
+.card {
+  background: var(--card-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 32px;
+  margin-bottom: 20px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+}
+
+h1 {
+  font-size: 1.5rem;
+  margin-top: 0;
+  font-weight: 700;
+  background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+h2 {
+  font-size: 1.1rem;
+  color: var(--text);
+}
+
+label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 14px 0 6px;
+  color: var(--muted);
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 10px 12px;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: var(--text);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family: inherit;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+button:active {
+  transform: translateY(1px);
+}
+
+button.primary {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 4px 14px var(--primary-glow);
+}
+
+button.primary:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+}
+
+button.danger {
+  background: rgba(248, 113, 113, 0.12);
+  color: var(--danger);
+  border: 1px solid rgba(248, 113, 113, 0.25);
+}
+
+button.danger:hover {
+  background: rgba(248, 113, 113, 0.2);
+}
+
+button.success {
+  background: rgba(52, 211, 153, 0.12);
+  color: var(--success);
+  border: 1px solid rgba(52, 211, 153, 0.25);
+}
+
+button.success:hover {
+  background: rgba(52, 211, 153, 0.2);
+}
+
+button.ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+button.ghost:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.actions {
+  margin-top: 22px;
+  display: flex;
+  gap: 10px;
+}
+
+.msg {
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.msg.error {
+  background: rgba(248, 113, 113, 0.12);
+  color: var(--danger);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+}
+
+.msg.success {
+  background: rgba(52, 211, 153, 0.12);
+  color: var(--success);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+}
+
+.msg.hidden {
+  display: none;
+}
+
+#tableWrap,
+#liveTableWrap,
+#appUsageTableWrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+
+th {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Table rows and badges are fully re-rendered (innerHTML swap) on every
+   poll cycle in the admin/attendance JS -- so a plain fade-in animation
+   here replays automatically on every refresh, giving a "live updating"
+   feel with zero JS changes. */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+tbody tr {
+  animation: fadeIn 0.35s ease;
+}
+
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  animation: fadeIn 0.3s ease;
+}
+
+.badge.pending {
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+}
+
+.badge.active {
+  background: rgba(52, 211, 153, 0.15);
+  color: var(--success);
+}
+
+.badge.idle {
+  background: rgba(251, 146, 60, 0.15);
+  color: var(--warning);
+}
+
+.badge.offline {
+  background: rgba(148, 163, 184, 0.15);
+  color: var(--muted);
+}
+
+.badge.rejected {
+  background: rgba(248, 113, 113, 0.15);
+  color: var(--danger);
+}
+
+/* Subtle pulse specifically on "active" status, so a genuinely live/working
+   employee visually reads as live at a glance, not just a static green pill. */
+@keyframes pulseGlow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.45);
+  }
+
+  50% {
+    box-shadow: 0 0 0 5px rgba(52, 211, 153, 0);
+  }
+}
+
+.badge.active {
+  animation: fadeIn 0.3s ease, pulseGlow 2.2s ease-in-out infinite;
+}
+
+.ws-status-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.ws-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.ws-grid>div {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: rgba(15, 23, 42, 0.4);
+}
+
+.ws-grid>div>div {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-top: 4px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+@media (max-width: 480px) {
+  .ws-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.row-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.row-actions button {
+  padding: 6px 12px;
+  font-size: 0.82rem;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.topbar a {
+  color: var(--primary);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.topbar a:hover {
+  text-decoration: underline;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 0;
+  color: var(--muted);
+}
+
+.policy-text {
+  white-space: pre-wrap;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  font-size: 0.88rem;
+  max-height: 320px;
+  overflow-y: auto;
+  margin: 10px 0 16px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.step {
+  display: none;
+}
+
+.step.active {
+  display: block;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.checkbox-row input {
+  width: auto;
+  margin-top: 3px;
+  accent-color: var(--primary);
+}
+
+.checkbox-row label {
+  margin: 0;
+  font-weight: 400;
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.status-block {
+  text-align: center;
+  padding: 28px 0;
+}
+
+.status-block .big-time {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 6px 0 18px;
+  font-variant-numeric: tabular-nums;
+  background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

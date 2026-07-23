@@ -1,0 +1,48 @@
+{
+  "name": "abhimo-tracker",
+  "version": "0.1.0",
+  "description": "Abhimo Tracker desktop tray app -- pairs with the onboarding page via abhimo://, stores credentials locally, and keeps them in sync when the employee changes their password.",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "dependencies": {
+    "active-win": "^9.0.0"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.abhimotechnologies.tracker",
+    "productName": "Abhimo Tracker",
+    "protocols": {
+      "name": "Abhimo Tray Pairing",
+      "schemes": [
+        "abhimo"
+      ]
+    },
+    "win": {
+      "target": "nsis",
+      "artifactName": "AbhimoTrackerSetup.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "credential-store.js",
+      "idle-monitor.js",
+      "activity-tracker.js",
+      "upload-queue.js",
+      "config.js",
+      "login-window.html",
+      "assets/**/*",
+      "node_modules/active-win/**/*"
+    ]
+  }
+}

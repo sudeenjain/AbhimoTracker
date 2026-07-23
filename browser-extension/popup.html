@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Abhimo Tracker</title>
+  <style>
+    body {
+      width: 280px;
+      font-family: -apple-system, Segoe UI, Roboto, sans-serif;
+      padding: 14px;
+      color: #1a1a1a;
+    }
+    h1 { font-size: 15px; margin: 0 0 10px; }
+    label { display: block; font-size: 12px; margin: 8px 0 3px; color: #555; }
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 6px 8px;
+      font-size: 13px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      width: 100%;
+      margin-top: 12px;
+      padding: 7px;
+      font-size: 13px;
+      border: none;
+      border-radius: 4px;
+      background: #2563eb;
+      color: #fff;
+      cursor: pointer;
+    }
+    button.secondary { background: #6b7280; }
+    #msg {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #b91c1c;
+      display: none;
+    }
+    #statusPanel { font-size: 12px; line-height: 1.6; }
+    .row { display: flex; justify-content: space-between; }
+    .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+    .dot.active { background: #16a34a; }
+    .dot.idle { background: #d97706; }
+    .dot.off { background: #9ca3af; }
+    .muted { color: #6b7280; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <h1>Abhimo Tracker</h1>
+
+  <div id="loginForm">
+    <label for="apiBase">Backend URL</label>
+    <input id="apiBase" type="text" placeholder="http://localhost/attendance-system/backend/public">
+    <label for="username">Username</label>
+    <input id="username" type="text" autocomplete="username">
+    <label for="password">Password</label>
+    <input id="password" type="password" autocomplete="current-password">
+    <button id="loginBtn">Connect</button>
+    <div id="msg"></div>
+  </div>
+
+  <div id="statusPanel" class="hidden">
+    <div class="row"><span class="muted">Signed in as</span><span id="pairedAs"></span></div>
+    <div class="row"><span class="muted">Status</span>
+      <span><span id="statusDot" class="dot off"></span><span id="statusText">-</span></span>
+    </div>
+    <div class="row"><span class="muted">Current site</span><span id="currentDomain">-</span></div>
+    <div class="row"><span class="muted">Queued uploads</span><span id="pendingCount">0</span></div>
+    <div id="lastError" class="hidden" style="color:#b91c1c; margin-top:6px;"></div>
+    <button id="logoutBtn" class="secondary">Disconnect</button>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

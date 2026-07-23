@@ -1,0 +1,11 @@
+# Terminal 1: RelayHub Server
+cd P:\AbhimoTracker\publish\RelayHubExe
+.\AbhimoTracker.RelayHub.exe
+
+# Terminal 2: Employee Tracker (Desktop Tray Client)
+cd P:\AbhimoTracker\publish\Employee
+.\AbhimoTracker.Employee.exe
+
+# Terminal 3: Administrator Console (WebView2 App)
+cd P:\AbhimoTracker\publish\Admin
+.\AbhimoTracker.Admin.exe

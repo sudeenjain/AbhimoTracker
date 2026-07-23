@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "Abhimo Tracker -- Website Activity",
+  "version": "0.1.0",
+  "description": "Records the domain of the active browser tab during working hours, for the same backend the Abhimo desktop tray app already reports to. Domain only -- no page content, no full URLs, no browsing history is ever read.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsi8dpx5umRgrtZCUbHpcPcx635sYBNQo4PxkdLKA7+aMsZ+JTtXs1j4KzNoVLQWB5K74bEzVeUk3tJtQpSfdcy8Py5x17qMqt4KExEBHUVU3Oi+nh6tuMLgAQRbBjt4n09Eda2OyEI0zLhRV1m76QCRTPx+AzbHN8KQPwJ5ucmw2Y/QRFSLpbGHjGvL+cwWJLnNGMKOsygTxMWx0RwOBSUm2oLCS9tC6bymsm1FKYg7gptnX3sPC8Wz0y7Hg/J9TryFSqfJ1lZFUb6Spkacahqv1DCHY5q5ItOte25MOGDlq+NQoLy5bf7K64vMJTQxeyUlycGKjnvnzMq2eRiFihwIDAQAB",
+  "permissions": [
+    "tabs",
+    "storage",
+    "alarms",
+    "idle"
+  ],
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Abhimo Tracker"
+  },
+  "minimum_chrome_version": "109",
+  "externally_connectable": {
+    "matches": [
+      "http://127.0.0.1:8090/*",
+      "http://localhost:8090/*"
+    ]
+  }
+}

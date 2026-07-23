@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abhimo Admin - Attendance</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+    <div class="page wide">
+        <div class="card">
+            <div class="topbar">
+                <h1>Attendance</h1>
+                <div>
+                    <a href="pending.html" style="margin-right: 14px;">Pending employees</a>
+                    <button class="ghost" id="logoutBtn">Log out</button>
+                </div>
+            </div>
+
+            <label for="dateInput">Date</label>
+            <input type="date" id="dateInput">
+
+            <div id="msg" class="msg hidden"></div>
+            <div id="tableWrap"></div>
+        </div>
+
+        <div class="card">
+            <div class="topbar">
+                <h1>Live employee status</h1>
+                <span class="muted" id="liveGeneratedAt"></span>
+            </div>
+            <div id="liveMsg" class="msg hidden"></div>
+            <div id="liveTableWrap"></div>
+        </div>
+
+        <div class="card">
+            <div class="topbar">
+                <h1>App usage &amp; idle alerts</h1>
+                <span class="muted" id="appUsageGeneratedAt"></span>
+            </div>
+            <p class="muted" style="margin-bottom: 10px;">
+                Foreground application only (never window titles) -- see the monitoring
+                policy for exactly what this collects. "Not working" fires after 1 hour
+                of continuous idle time.
+            </p>
+            <div id="appUsageMsg" class="msg hidden"></div>
+            <div id="appUsageTableWrap"></div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        const tableWrap = document.getElementById('tableWrap');
+        const msg = document.getElementById('msg');
+
+        // Shared "Updated Xs ago" ticker for both panels below -- ticks every
+        // second client-side, independent of when the next poll actually lands, so
+        // the header visibly counts up instead of only changing every 8-15s.
+        const lastUpdatedAt = { live: null, appUsage: null };
+        function tickRelativeTimes() {
+            if (lastUpdatedAt.live) {
+                liveGeneratedAt.textContent = `Updated ${Math.max(0, Math.round((Date.now() - lastUpdatedAt.live) / 1000))}s ago`;
+            }
+            if (lastUpdatedAt.appUsage) {
+                appUsageGeneratedAt.textContent = `Updated ${Math.max(0, Math.round((Date.now() - lastUpdatedAt.appUsage) / 1000))}s ago`;
+            }
+        }
+        setInterval(tickRelativeTimes, 1000);
+        const dateInput = document.getElementById('dateInput');
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('auth_token');
+            window.location.href = 'login.html';
+        });
+
+        function showMsg(type, text) {
+            msg.className = `msg ${type}`;
+            msg.textContent = text;
+        }
+
+        function todayLocal() {
+            const d = new Date();
+            return d.toISOString().slice(0, 10);
+        }
+
+        async function loadAttendance() {
+            const date = dateInput.value || todayLocal();
+            const { ok, status, data } = await apiFetch(`/api/admin/attendance?date=${date}`);
+
+            if (status === 401 || status === 403) {
+                window.location.href = 'login.html';
+                return;
+            }
+            if (!ok) {
+                showMsg('error', data.error || 'Failed to load attendance.');
+                return;
+            }
+            msg.className = 'msg hidden';
+
+            if (data.attendance.length === 0) {
+                tableWrap.innerHTML = '<div class="empty-state">No active employees found.</div>';
+                return;
+            }
+
+            const rows = data.attendance.map((row) => {
+                let badge;
+                if (!row.sign_in_time) {
+                    badge = '<span class="badge pending">Not signed in</span>';
+                } else if (!row.sign_out_time) {
+                    badge = '<span class="badge active">Signed in</span>';
+                } else {
+                    badge = '<span class="badge active">Complete</span>';
+                }
+                return `
+      <tr>
+        <td>${row.name}</td>
+        <td>${row.role}</td>
+        <td>${row.sign_in_time || '<span class="muted">-</span>'}</td>
+        <td>${row.sign_out_time || '<span class="muted">-</span>'}</td>
+        <td>${badge}</td>
+        <td><a href="employee-activity.html?id=${row.employee_id}">View activity</a></td>
+      </tr>
+    `;
+            }).join('');
+
+            tableWrap.innerHTML = `
+    <table>
+      <thead>
+        <tr><th>Name</th><th>Role</th><th>Sign in</th><th>Sign out</th><th>Status</th><th></th></tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+        }
+
+        dateInput.value = todayLocal();
+        dateInput.addEventListener('change', loadAttendance);
+        loadAttendance();
+
+        // ---- Live employee status (Phase 7) ----
+        // Simple AJAX polling, not WebSockets/SSE -- see AdminWorkSessionController
+        // docblock for why. Refresh interval kept in one place here.
+        const LIVE_STATUS_POLL_MS = 8000;
+        const liveTableWrap = document.getElementById('liveTableWrap');
+        const liveMsg = document.getElementById('liveMsg');
+        const liveGeneratedAt = document.getElementById('liveGeneratedAt');
+
+        function formatHms(totalSeconds) {
+            const s = Math.max(0, Math.floor(totalSeconds || 0));
+            const hh = String(Math.floor(s / 3600)).padStart(2, '0');
+            const mm = String(Math.floor((s % 3600) / 60)).padStart(2, '0');
+            const ss = String(s % 60).padStart(2, '0');
+            return `${hh}:${mm}:${ss}`;
+        }
+
+        function liveBadge(status) {
+            const cls = { ACTIVE: 'active', IDLE: 'pending', TAB_HIDDEN: 'pending', OFFLINE: 'rejected', SIGNED_OUT: 'rejected' }[status] || 'rejected';
+            const label = { ACTIVE: 'Active', IDLE: 'Idle', TAB_HIDDEN: 'Idle (tab hidden)', OFFLINE: 'Offline', SIGNED_OUT: 'Signed out' }[status] || status;
+            return `<span class="badge ${cls}">${label}</span>`;
+        }
+
+        async function loadLiveStatus() {
+            const { ok, status, data } = await apiFetch('/api/admin/work-sessions/live');
+
+            if (status === 401 || status === 403) {
+                window.location.href = 'login.html';
+                return;
+            }
+            if (!ok) {
+                liveMsg.className = 'msg error';
+                liveMsg.textContent = data.error || 'Failed to load live status.';
+                return;
+            }
+            liveMsg.className = 'msg hidden';
+            liveGeneratedAt.textContent = `Updated just now`;
+            lastUpdatedAt.live = Date.now();
+
+            if (data.employees.length === 0) {
+                liveTableWrap.innerHTML = '<div class="empty-state">No active employees found.</div>';
+                return;
+            }
+
+            const rows = data.employees.map((row) => `
+    <tr>
+      <td>${row.name}</td>
+      <td>${liveBadge(row.status)}</td>
+      <td>${row.task_description || '<span class="muted">-</span>'}</td>
+      <td>${row.progress_status ? `${row.progress_status}${row.progress_percent !== null ? ' (' + row.progress_percent + '%)' : ''}` : '<span class="muted">-</span>'}</td>
+      <td>${formatHms(row.active_seconds)}</td>
+      <td>${formatHms(row.idle_seconds)}</td>
+      <td>${row.sign_in_time || '<span class="muted">-</span>'}</td>
+      <td>${row.last_heartbeat_at || '<span class="muted">-</span>'}</td>
+    </tr>
+  `).join('');
+
+            liveTableWrap.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th><th>Status</th><th>Current task</th><th>Progress</th>
+          <th>Active</th><th>Idle</th><th>Sign-in</th><th>Last heartbeat</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+        }
+
+        loadLiveStatus();
+        setInterval(loadLiveStatus, LIVE_STATUS_POLL_MS);
+
+        // ---- App usage & idle alerts (item 8) ----
+        // Two separate API calls merged client-side: live-status has the
+        // prolonged-idle flag (activity_logs-based, from the tray app), app-usage
+        // has today's per-app time totals. Different data source from the
+        // "Live employee status" panel above (that one is the browser/tray
+        // heartbeat system) -- see AdminActivityController vs AdminWorkSessionController.
+        const APP_USAGE_POLL_MS = 15000;
+        const appUsageTableWrap = document.getElementById('appUsageTableWrap');
+        const appUsageMsg = document.getElementById('appUsageMsg');
+        const appUsageGeneratedAt = document.getElementById('appUsageGeneratedAt');
+
+        function topAppsList(apps) {
+            if (!apps || apps.length === 0) return '<span class="muted">No app data yet today</span>';
+            return apps.slice(0, 3).map((a) => `${a.app} (${formatHms(a.total_seconds)})`).join(', ');
+        }
+
+        async function loadAppUsageAndAlerts() {
+            const [liveRes, usageRes] = await Promise.all([
+                apiFetch('/api/admin/live-status'),
+                apiFetch('/api/admin/activity/app-usage'),
+            ]);
+
+            if (liveRes.status === 401 || liveRes.status === 403) {
+                window.location.href = 'login.html';
+                return;
+            }
+            if (!liveRes.ok || !usageRes.ok) {
+                appUsageMsg.className = 'msg error';
+                appUsageMsg.textContent = (liveRes.data && liveRes.data.error) || (usageRes.data && usageRes.data.error) || 'Failed to load app usage.';
+                return;
+            }
+            appUsageMsg.className = 'msg hidden';
+            appUsageGeneratedAt.textContent = `Updated just now`;
+            lastUpdatedAt.appUsage = Date.now();
+
+            const usageByEmployee = {};
+            usageRes.data.employees.forEach((e) => { usageByEmployee[e.employee_id] = e.apps; });
+
+            if (liveRes.data.employees.length === 0) {
+                appUsageTableWrap.innerHTML = '<div class="empty-state">No active employees found.</div>';
+                return;
+            }
+
+            const rows = liveRes.data.employees.map((row) => {
+                const alert = row.prolonged_idle
+                    ? `<span class="badge rejected">Not working (${formatHms(row.continuous_idle_seconds)})</span>`
+                    : (row.status === 'idle'
+                        ? `<span class="badge pending">Idle (${formatHms(row.continuous_idle_seconds)})</span>`
+                        : `<span class="badge ${row.status === 'active' ? 'active' : 'rejected'}">${row.status}</span>`);
+
+                return `
+      <tr>
+        <td>${row.name}</td>
+        <td>${alert}</td>
+        <td>${topAppsList(usageByEmployee[row.employee_id])}</td>
+      </tr>
+    `;
+            }).join('');
+
+            appUsageTableWrap.innerHTML = `
+    <table>
+      <thead><tr><th>Name</th><th>Status</th><th>Top apps today</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+        }
+
+        loadAppUsageAndAlerts();
+        setInterval(loadAppUsageAndAlerts, APP_USAGE_POLL_MS);
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr@8.0.7/dist/browser/signalr.min.js"></script>
+    <script src="../js/live-status-client.js"></script>
+</body>
+
+</html>
