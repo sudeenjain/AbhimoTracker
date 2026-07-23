@@ -14,11 +14,17 @@ $pass = env('DB_PASS', '');
 
 $dsn = "mysql:host={$host};port={$port};dbname={$name};charset=utf8mb4";
 
+$caPath = env('DB_SSL_CA', '/etc/ssl/certs/ca-certificates.crt');
+
 try {
     $pdo = new PDO($dsn, $user, $pass, [
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES   => false,
+
+        // Required for TiDB Cloud TLS connection
+        PDO::MYSQL_ATTR_SSL_CA       => $caPath,
+        PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => true,
     ]);
 } catch (\PDOException $e) {
     error_log("Database connection failed: {$e->getMessage()}");
