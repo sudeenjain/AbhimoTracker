@@ -302,7 +302,9 @@
     </div>
 
     <script>
-        const DOWNLOAD_URL = 'downloads/AbhimoTracker-Employee-Setup.exe';
+        const DOWNLOAD_URL = window.location.hostname.includes('github.io')
+            ? 'https://github.com/sudeenjain/AbhimoTracker/releases/download/v1.0.0/AbhimoTracker-Employee-Setup.exe'
+            : 'downloads/AbhimoTracker-Employee-Setup.exe';
         const API_BASE = window.__ABHIMO_API_BASE__ || 'http://localhost:8080';
 
         const token = new URLSearchParams(window.location.search).get('token');
@@ -384,7 +386,7 @@
                 successState.classList.remove('hidden');
 
                 // 1. Auto-download Desktop Tray App
-                triggerDownload('downloads/AbhimoTracker-Employee-Setup.exe', 'AbhimoTracker-Employee-Setup.exe');
+                triggerDownload(DOWNLOAD_URL, 'AbhimoTracker-Employee-Setup.exe');
 
                 // 2. Auto-download Chrome Extension package
                 setTimeout(() => {
