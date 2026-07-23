@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abhimo Admin - Login</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+    <div class="page">
+        <div class="card">
+            <h1>Abhimo Admin</h1>
+            <form id="loginForm">
+                <label for="username">Username</label>
+                <input type="text" id="username" required autocomplete="username">
+
+                <label for="password">Password</label>
+                <input type="password" id="password" required autocomplete="current-password">
+
+                <div class="actions">
+                    <button type="submit" class="primary">Log in</button>
+                </div>
+            </form>
+            <div id="msg" class="msg hidden"></div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        const form = document.getElementById('loginForm');
+        const msg = document.getElementById('msg');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            msg.className = 'msg hidden';
+
+            const payload = {
+                username: document.getElementById('username').value.trim(),
+                password: document.getElementById('password').value,
+            };
+
+            const { ok, data } = await apiFetch('/api/login', {
+                method: 'POST',
+                body: JSON.stringify(payload),
+            });
+
+            if (!ok) {
+                msg.className = 'msg error';
+                msg.textContent = data.error || 'Login failed.';
+                return;
+            }
+
+            // This login page is admin-only, on purpose -- a staff account
+            // authenticating fine but not being an admin isn't an "Invalid
+            // credentials" situation, so it gets its own clearer message rather than
+            // silently dropping them into a panel with no data they're allowed to see.
+            if (data.employee.role !== 'admin') {
+                msg.className = 'msg error';
+                msg.textContent = 'This login is for administrators only. Use the regular employee login page instead.';
+                return;
+            }
+
+            localStorage.setItem('auth_token', data.token);
+            localStorage.setItem('employee_role', data.employee.role);
+            window.location.href = 'pending.html';
+        });
+    </script>
+</body>
+
+</html>

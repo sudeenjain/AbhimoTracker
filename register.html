@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register - Abhimo Technologies</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-gradient: radial-gradient(ellipse at top, #1e293b 0%, #0f172a 100%);
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --accent: #3b82f6;
+      --accent-glow: rgba(59, 130, 246, 0.3);
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --danger: #ef4444;
+      --success: #10b981;
+      --input-bg: rgba(15, 23, 42, 0.6);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--bg-gradient);
+      font-family: 'Outfit', sans-serif;
+      color: var(--text-primary);
+      overflow-x: hidden;
+      padding: 20px;
+    }
+
+    /* Decorative glowing backdrops */
+    .orb {
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      background: var(--accent);
+      filter: blur(140px);
+      opacity: 0.15;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .orb-1 {
+      top: 10%;
+      left: 20%;
+    }
+
+    .orb-2 {
+      bottom: 10%;
+      right: 20%;
+      background: #a855f7;
+    }
+
+    .container {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 480px;
+      perspective: 1000px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      transition: transform 0.4s ease, box-shadow 0.4s ease;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .header h1 {
+      font-size: 1.85rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header p {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .stepper {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 25px;
+    }
+
+    .step-dot {
+      width: 24px;
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.1);
+      transition: background 0.3s ease, width 0.3s ease;
+    }
+
+    .step-dot.active {
+      width: 40px;
+      background: var(--accent);
+      box-shadow: 0 0 10px var(--accent-glow);
+    }
+
+    /* Form and inputs */
+    .step-content {
+      display: none;
+    }
+
+    .step-content.active {
+      display: block;
+      animation: fadeIn 0.4s ease forwards;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--input-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    select {
+      appearance: none;
+      cursor: pointer;
+    }
+
+    .username-hint {
+      min-height: 16px;
+      font-size: 0.78rem;
+      margin-top: 6px;
+      color: #f87171;
+    }
+
+    .username-hint.checking {
+      color: var(--text-secondary);
+    }
+
+    input#username.taken {
+      border-color: #f87171;
+    }
+
+    input#username.available {
+      border-color: #4ade80;
+    }
+
+    /* Custom dropdown arrow for select */
+    .select-wrapper::after {
+      content: '▼';
+      font-size: 0.65rem;
+      color: var(--text-secondary);
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+
+    .optional {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      font-weight: normal;
+      text-transform: none;
+      margin-left: 4px;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+    }
+
+    button.btn-primary {
+      background: var(--accent);
+      color: #ffffff;
+      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+    }
+
+    button.btn-primary:hover {
+      background: #2563eb;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+    }
+
+    button.btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color);
+    }
+
+    button.btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-primary);
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 12px;
+      margin-top: 30px;
+    }
+
+    /* OTP Code Inputs */
+    .otp-container {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 25px 0;
+    }
+
+    .otp-input {
+      width: 48px;
+      height: 52px;
+      font-size: 1.5rem;
+      font-weight: 700;
+      text-align: center;
+      border-radius: 10px;
+    }
+
+    .sent-email-display {
+      color: var(--accent);
+    }
+
+    .resend-info {
+      text-align: center;
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      margin-top: 15px;
+    }
+
+    .resend-btn {
+      background: none;
+      border: none;
+      color: var(--accent);
+      font-weight: 600;
+      cursor: pointer;
+      display: inline;
+      padding: 0;
+      width: auto;
+      font-size: 0.88rem;
+    }
+
+    .resend-btn:disabled {
+      color: var(--text-secondary);
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    /* Success Screen styles */
+    .success-header {
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    .success-icon {
+      width: 72px;
+      height: 72px;
+      background: rgba(16, 185, 129, 0.1);
+      border: 2px solid var(--success);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 25px;
+      color: var(--success);
+      font-size: 2.2rem;
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+      animation: scaleUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    .success-message {
+      font-size: 1.15rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+
+    .success-sub {
+      font-size: 0.92rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 30px;
+    }
+
+    /* Alert message block */
+    .alert {
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      margin-top: 20px;
+      line-height: 1.5;
+      display: none;
+      animation: slideDown 0.3s ease forwards;
+    }
+
+    .alert.alert-error {
+      display: block;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      color: #fca5a5;
+    }
+
+    .alert.alert-success {
+      display: block;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      color: #a7f3d0;
+    }
+
+    /* Loader template */
+    .spinner {
+      border: 3px solid rgba(255, 255, 255, 0.1);
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border-left-color: #fff;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(15px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes scaleUp {
+      from {
+        transform: scale(0.6);
+        opacity: 0;
+      }
+
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideDown {
+      from {
+        transform: translateY(-10px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <div class="container">
+    <div class="card">
+      <div id="registrationFlow">
+
+        <!-- Stepper Indicator -->
+        <div id="flowStepper" class="stepper">
+          <div class="step-dot active" id="dot1"></div>
+          <div class="step-dot" id="dot2"></div>
+          <div class="step-dot" id="dot3"></div>
+        </div>
+
+        <!-- STEP 1: Details Submission -->
+        <div id="stepDetails" class="step-content active">
+          <div class="header">
+            <h1>Join Our Team</h1>
+            <p>Complete the fields below to send your application to Abhimo Technologies</p>
+          </div>
+
+          <form id="detailsForm">
+            <div class="form-group">
+              <label for="name">Full Name</label>
+              <input type="text" id="name" required placeholder="e.g. John Doe">
+            </div>
+
+            <div class="form-group">
+              <label for="username">Choose a Username</label>
+              <input type="text" id="username" required minlength="3" maxlength="30"
+                pattern="[A-Za-z][A-Za-z0-9_.]{2,29}" placeholder="e.g. john.doe"
+                title="Start with a letter, 3-30 characters, letters/numbers/dots/underscores only" autocomplete="off">
+              <div id="usernameHint" class="username-hint"></div>
+            </div>
+
+            <div class="form-group">
+              <label for="email">Email Address</label>
+              <input type="email" id="email" required placeholder="e.g. name@example.com">
+            </div>
+
+            <div class="form-group">
+              <label for="phone">Phone Number</label>
+              <input type="tel" id="phone" required placeholder="e.g. +1 555-0199">
+            </div>
+
+            <div class="form-group">
+              <label for="role">Role Applied For</label>
+              <div class="input-wrapper select-wrapper">
+                <select id="role" required>
+                  <option value="" disabled selected>Select a role...</option>
+                  <option value="Employee">Employee</option>
+                  <option value="Intern">Intern</option>
+                  <option value="Part-time Worker">Part-time Worker</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="availability">Availability Preference <span class="optional">(Optional)</span></label>
+              <textarea id="availability" rows="2" placeholder="e.g. Monday-Friday mornings, 9am - 1pm"></textarea>
+            </div>
+
+            <button type="submit" class="btn-primary" id="btnSendOtp">
+              <span>Send Verification OTP</span>
+            </button>
+          </form>
+        </div>
+
+        <!-- STEP 2: OTP Verification -->
+        <div id="stepVerification" class="step-content">
+          <div class="header">
+            <h1>Verify Your Email</h1>
+            <p>We've sent a 6-digit confirmation code to <strong id="sentEmailDisplay"
+                class="sent-email-display"></strong>. Enter it below to register.</p>
+          </div>
+
+          <form id="otpForm">
+            <div class="otp-container">
+              <input type="text" class="otp-input" maxlength="1" required pattern="[0-9]" inputmode="numeric">
+              <input type="text" class="otp-input" maxlength="1" required pattern="[0-9]" inputmode="numeric">
+              <input type="text" class="otp-input" maxlength="1" required pattern="[0-9]" inputmode="numeric">
+              <input type="text" class="otp-input" maxlength="1" required pattern="[0-9]" inputmode="numeric">
+              <input type="text" class="otp-input" maxlength="1" required pattern="[0-9]" inputmode="numeric">
+              <input type="text" class="otp-input" maxlength="1" required pattern="[0-9]" inputmode="numeric">
+            </div>
+
+            <button type="submit" class="btn-primary" id="btnVerifyOtp">
+              <span>Verify & Complete Registration</span>
+            </button>
+
+            <div class="resend-info">
+              Didn't receive the email? <button type="button" class="resend-btn" id="btnResend" disabled>Resend
+                Code</button> <span id="timerText">(45s)</span>
+            </div>
+
+            <div class="btn-group">
+              <button type="button" class="btn-secondary" id="btnBackToDetails">Back</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- STEP 3: Registration Success Screen -->
+        <div id="stepSuccess" class="step-content">
+          <div class="success-header">
+            <div class="success-icon">✓</div>
+            <h2 class="success-message">Thank you for registration team Abhimo</h2>
+            <p class="success-sub">Application logged! We will meet you soon. You'll receive credentials in your inbox
+              upon profile approval.</p>
+
+            <button type="button" class="btn-primary" onclick="window.location.href='login.html'">
+              <span>Go to Login Page</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Verification Alert Feedbacks -->
+        <div id="flowAlert" class="alert"></div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    let timerInterval = null;
+    let remainingSeconds = 0;
+
+    // Store details during OTP verification transition
+    const cachedDetails = {
+      name: '',
+      username: '',
+      email: '',
+      phone: '',
+      role: '',
+      availability_preference: ''
+    };
+    // null = not checked yet / currently checking, true/false = last known result.
+    let usernameAvailable = null;
+
+    const widgets = {
+      alert: document.getElementById('flowAlert'),
+      detailsForm: document.getElementById('detailsForm'),
+      otpForm: document.getElementById('otpForm'),
+
+      // Screens
+      stepDetails: document.getElementById('stepDetails'),
+      stepVerification: document.getElementById('stepVerification'),
+      stepSuccess: document.getElementById('stepSuccess'),
+
+      // Steppers
+      dot1: document.getElementById('dot1'),
+      dot2: document.getElementById('dot2'),
+      dot3: document.getElementById('dot3'),
+
+      // Interactive
+      btnSendOtp: document.getElementById('btnSendOtp'),
+      btnVerifyOtp: document.getElementById('btnVerifyOtp'),
+      btnResend: document.getElementById('btnResend'),
+      btnBackToDetails: document.getElementById('btnBackToDetails'),
+      timerText: document.getElementById('timerText'),
+      sentEmailDisplay: document.getElementById('sentEmailDisplay'),
+      usernameInput: document.getElementById('username'),
+      usernameHint: document.getElementById('usernameHint'),
+
+      // OTP Boxes
+      otpInputs: Array.from(document.querySelectorAll('.otp-input'))
+    };
+
+    // Utility to handle messages
+    function showAlert(msg, isError = true) {
+      widgets.alert.className = `alert ${isError ? 'alert-error' : 'alert-success'}`;
+      widgets.alert.innerHTML = msg;
+      widgets.alert.style.display = 'block';
+    }
+
+    function hideAlert() {
+      widgets.alert.style.display = 'none';
+    }
+
+    function setButtonLoading(btn, isLoading) {
+      const span = btn.querySelector('span');
+      if (isLoading) {
+        btn.disabled = true;
+        const initialText = span.textContent;
+        btn.dataset.initialText = initialText;
+        span.innerHTML = `<span class="spinner"></span>`;
+      } else {
+        btn.disabled = false;
+        span.textContent = btn.dataset.initialText || 'Submit';
+      }
+    }
+
+    // OTP focus management
+    widgets.otpInputs.forEach((input, index) => {
+      input.addEventListener('input', (e) => {
+        const val = e.target.value;
+        if (val.length === 1 && index < widgets.otpInputs.length - 1) {
+          widgets.otpInputs[index + 1].focus();
+        }
+      });
+
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && e.target.value === '' && index > 0) {
+          widgets.otpInputs[index - 1].focus();
+        }
+      });
+
+      // Paste handler
+      input.addEventListener('paste', (e) => {
+        e.preventDefault();
+        const text = (e.clipboardData || window.clipboardData).getData('text').trim();
+        if (/^\d{6}$/.test(text)) {
+          widgets.otpInputs.forEach((inp, idx) => {
+            inp.value = text[idx];
+          });
+          widgets.otpInputs[5].focus();
+        }
+      });
+    });
+
+    // Flow controllers
+    function showStep(stepName) {
+      hideAlert();
+      [widgets.stepDetails, widgets.stepVerification, widgets.stepSuccess].forEach(step => {
+        step.classList.remove('active');
+      });
+
+      [widgets.dot1, widgets.dot2, widgets.dot3].forEach(dot => {
+        dot.classList.remove('active');
+      });
+
+      if (stepName === 'details') {
+        widgets.stepDetails.classList.add('active');
+        widgets.dot1.classList.add('active');
+      } else if (stepName === 'verification') {
+        widgets.stepVerification.classList.add('active');
+        widgets.dot1.classList.add('active');
+        widgets.dot2.classList.add('active');
+        widgets.sentEmailDisplay.textContent = cachedDetails.email;
+        widgets.otpInputs[0].focus();
+      } else if (stepName === 'success') {
+        widgets.stepSuccess.classList.add('active');
+        widgets.dot1.classList.add('active');
+        widgets.dot2.classList.add('active');
+        widgets.dot3.classList.add('active');
+        document.getElementById('flowStepper').style.display = 'none';
+      }
+    }
+
+    // Setup/Trigger Timer
+    function startResendTimer() {
+      clearInterval(timerInterval);
+      remainingSeconds = 45;
+      widgets.btnResend.disabled = true;
+      widgets.timerText.textContent = `(${remainingSeconds}s)`;
+
+      timerInterval = setInterval(() => {
+        remainingSeconds--;
+        if (remainingSeconds <= 0) {
+          clearInterval(timerInterval);
+          widgets.btnResend.disabled = false;
+          widgets.timerText.textContent = '';
+        } else {
+          widgets.timerText.textContent = `(${remainingSeconds}s)`;
+        }
+      }, 1000);
+    }
+
+    // Live username availability check -- debounced so it doesn't fire an
+    // API call on every keystroke. Per spec: silent when available, only
+    // speaks up when the username is taken (or malformed).
+    let usernameCheckTimer = null;
+    const USERNAME_FORMAT_RE = /^[A-Za-z][A-Za-z0-9_.]{2,29}$/;
+
+    function setUsernameState(state, message) {
+      widgets.usernameInput.classList.remove('taken', 'available');
+      widgets.usernameHint.classList.remove('checking');
+      if (state === 'taken') {
+        widgets.usernameInput.classList.add('taken');
+        widgets.usernameHint.textContent = message || 'That username is already taken.';
+        usernameAvailable = false;
+      } else if (state === 'available') {
+        widgets.usernameInput.classList.add('available');
+        widgets.usernameHint.textContent = '';
+        usernameAvailable = true;
+      } else if (state === 'checking') {
+        widgets.usernameHint.classList.add('checking');
+        widgets.usernameHint.textContent = 'Checking availability...';
+        usernameAvailable = null;
+      } else {
+        // 'idle' -- empty field or not enough characters yet, say nothing.
+        widgets.usernameHint.textContent = '';
+        usernameAvailable = null;
+      }
+    }
+
+    async function checkUsernameAvailability(username) {
+      try {
+        const res = await fetch(`${API_BASE}/api/register/check-username?username=${encodeURIComponent(username)}`);
+        const data = await res.json().catch(() => ({}));
+        if (data.available) {
+          setUsernameState('available');
+        } else {
+          setUsernameState('taken', data.error);
+        }
+      } catch (err) {
+        // Network hiccup -- don't block the person on a client-side check
+        // that couldn't complete; verify-otp re-checks server-side anyway.
+        setUsernameState('idle');
+      }
+    }
+
+    widgets.usernameInput.addEventListener('input', () => {
+      const value = widgets.usernameInput.value.trim();
+      clearTimeout(usernameCheckTimer);
+
+      if (value.length < 3) {
+        setUsernameState('idle');
+        return;
+      }
+      if (!USERNAME_FORMAT_RE.test(value)) {
+        setUsernameState('taken', 'Start with a letter; letters, numbers, dots, underscores only.');
+        return;
+      }
+
+      setUsernameState('checking');
+      usernameCheckTimer = setTimeout(() => checkUsernameAvailability(value.toLowerCase()), 400);
+    });
+
+    // Route 1: Trigger OTP Send
+    async function triggerOtpSend() {
+      hideAlert();
+      const payload = {
+        name: cachedDetails.name,
+        email: cachedDetails.email
+      };
+
+      const { ok, data } = await apiFetch('/api/register/send-otp', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+
+      if (ok) {
+        showStep('verification');
+        startResendTimer();
+      } else {
+        const err = (data.errors && data.errors.join(', ')) || data.error || 'Failed sending OTP verification code.';
+        showAlert(err, true);
+      }
+    }
+
+    // E1: Details Submit
+    widgets.detailsForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert();
+
+      cachedDetails.name = document.getElementById('name').value.trim();
+      cachedDetails.username = widgets.usernameInput.value.trim().toLowerCase();
+      cachedDetails.email = document.getElementById('email').value.trim();
+      cachedDetails.phone = document.getElementById('phone').value.trim();
+      cachedDetails.role = document.getElementById('role').value;
+      cachedDetails.availability_preference = document.getElementById('availability').value.trim();
+
+      if (usernameAvailable === false) {
+        showAlert('Please choose a different username before continuing.', true);
+        return;
+      }
+
+      setButtonLoading(widgets.btnSendOtp, true);
+      await triggerOtpSend();
+      setButtonLoading(widgets.btnSendOtp, false);
+    });
+
+    // E2: Verify OTP
+    widgets.otpForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert();
+
+      const enteredOtp = widgets.otpInputs.map(inp => inp.value).join('');
+      if (enteredOtp.length !== 6) {
+        showAlert('Please enter the entire 6-digit OTP verification code.', true);
+        return;
+      }
+
+      const payload = {
+        ...cachedDetails,
+        otp: enteredOtp
+      };
+
+      setButtonLoading(widgets.btnVerifyOtp, true);
+      const { ok, data } = await apiFetch('/api/register/verify-otp', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+      setButtonLoading(widgets.btnVerifyOtp, false);
+
+      if (ok) {
+        showStep('success');
+      } else {
+        const err = (data.errors && data.errors.join(', ')) || data.error || 'Verification of OTP failed.';
+        showAlert(err, true);
+      }
+    });
+
+    // Back button handler
+    widgets.btnBackToDetails.addEventListener('click', () => {
+      showStep('details');
+    });
+
+    // Resend code trigger
+    widgets.btnResend.addEventListener('click', async () => {
+      widgets.btnResend.disabled = true;
+      showAlert('Sending a new OTP code...', false);
+
+      const payload = {
+        name: cachedDetails.name,
+        email: cachedDetails.email
+      };
+
+      const { ok, data } = await apiFetch('/api/register/send-otp', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+
+      if (ok) {
+        showAlert('New verification code sent to your email.', false);
+        startResendTimer();
+      } else {
+        widgets.btnResend.disabled = false;
+        const err = (data.errors && data.errors.join(', ')) || data.error || 'Failed sending OTP verification code.';
+        showAlert(err, true);
+      }
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abhimo Admin - Pending Employees</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+    <div class="page wide">
+        <div class="card">
+            <div class="topbar">
+                <h1>Pending Employees</h1>
+                <div>
+                    <a href="attendance.html" style="margin-right: 14px;">Attendance</a>
+                    <button class="ghost" id="logoutBtn">Log out</button>
+                </div>
+            </div>
+            <p class="muted">Approve to send an onboarding link, or reject the application.</p>
+
+            <div id="msg" class="msg hidden"></div>
+            <div id="tableWrap"></div>
+        </div>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        const tableWrap = document.getElementById('tableWrap');
+        const msg = document.getElementById('msg');
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('auth_token');
+            window.location.href = 'login.html';
+        });
+
+        function showMsg(type, text) {
+            msg.className = `msg ${type}`;
+            msg.textContent = text;
+            setTimeout(() => { msg.className = 'msg hidden'; }, 5000);
+        }
+
+        async function loadPending() {
+            const { ok, status, data } = await apiFetch('/api/admin/employees?status=pending');
+
+            if (status === 401 || status === 403) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            if (!ok) {
+                showMsg('error', data.error || 'Failed to load pending employees.');
+                return;
+            }
+
+            if (data.employees.length === 0) {
+                tableWrap.innerHTML = '<div class="empty-state">No pending applications right now.</div>';
+                return;
+            }
+
+            const rows = data.employees.map((emp) => `
+    <tr>
+      <td>${emp.name}</td>
+      <td>${emp.email}</td>
+      <td>${emp.phone}</td>
+      <td>${emp.role}</td>
+      <td>${emp.availability_preference || '<span class="muted">-</span>'}</td>
+      <td>
+        <div class="row-actions">
+          <button class="success" onclick="approve(${emp.id})">Approve</button>
+          <button class="danger" onclick="reject(${emp.id})">Reject</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+
+            tableWrap.innerHTML = `
+    <table>
+      <thead>
+        <tr><th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Availability</th><th>Actions</th></tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+        }
+
+        async function approve(id) {
+            const { ok, data } = await apiFetch(`/api/admin/employees/${id}/approve`, { method: 'POST' });
+            if (ok) {
+                // approve() no longer issues credentials directly -- it sends an
+                // onboarding link (see OnboardingController). onboarding_link_dev_only
+                // only exists so you can test without a working SMTP server; it's not
+                // meant to be shown in a real deployment.
+                const devNote = data.onboarding_link_dev_only ? ` (dev link: ${data.onboarding_link_dev_only})` : '';
+                showMsg('success', `Approved. Onboarding link emailed to the employee.${devNote}`);
+                loadPending();
+            } else {
+                showMsg('error', data.error || 'Approval failed.');
+            }
+        }
+
+        async function reject(id) {
+            if (!confirm('Reject this application?')) return;
+            const { ok, data } = await apiFetch(`/api/admin/employees/${id}/reject`, { method: 'POST' });
+            if (ok) {
+                showMsg('success', 'Application rejected.');
+                loadPending();
+            } else {
+                showMsg('error', data.error || 'Rejection failed.');
+            }
+        }
+
+        loadPending();
+        setInterval(loadPending, 10000);
+    </script>
+</body>
+
+</html>

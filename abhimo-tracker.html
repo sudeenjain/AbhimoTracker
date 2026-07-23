@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activate Abhimo Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient: radial-gradient(ellipse at top, #1e293b 0%, #0f172a 100%);
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --accent: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.3);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: var(--bg-gradient);
+            font-family: 'Outfit', sans-serif;
+            color: var(--text-primary);
+            padding: 20px;
+        }
+
+        .orb {
+            position: fixed;
+            width: 320px;
+            height: 320px;
+            border-radius: 50%;
+            background: var(--accent);
+            filter: blur(140px);
+            opacity: 0.15;
+            pointer-events: none;
+        }
+
+        .orb-1 {
+            top: 8%;
+            left: 15%;
+        }
+
+        .orb-2 {
+            bottom: 8%;
+            right: 15%;
+            background: #a855f7;
+        }
+
+        .container {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 560px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .header h1 {
+            font-size: 1.85rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .step {
+            display: flex;
+            gap: 14px;
+            padding: 18px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .step:last-of-type {
+            border-bottom: none;
+        }
+
+        .step-num {
+            flex-shrink: 0;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--accent);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+
+        .step-body h2 {
+            font-size: 1.05rem;
+            margin-bottom: 6px;
+        }
+
+        .step-body p {
+            color: var(--text-secondary);
+            font-size: 0.88rem;
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+
+        button {
+            font-family: inherit;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        button.btn-primary {
+            background: var(--accent);
+            color: #fff;
+            box-shadow: 0 4px 14px var(--accent-glow);
+        }
+
+        button.btn-primary:hover {
+            transform: translateY(-1px);
+        }
+
+        button.btn-primary:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        button.btn-secondary {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .policy-box {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            max-height: 220px;
+            overflow-y: auto;
+            font-size: 0.82rem;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            white-space: pre-wrap;
+            margin-bottom: 14px;
+        }
+
+        .agree-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .agree-row input {
+            margin-top: 3px;
+            width: 16px;
+            height: 16px;
+            accent-color: var(--accent);
+        }
+
+        .agree-row label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .msg {
+            font-size: 0.88rem;
+            padding: 12px 14px;
+            border-radius: 10px;
+            margin-top: 16px;
+            display: none;
+        }
+
+        .msg.error {
+            display: block;
+            background: rgba(239, 68, 68, 0.12);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .msg.success {
+            display: block;
+            background: rgba(16, 185, 129, 0.12);
+            color: #6ee7b7;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .downloaded-badge {
+            color: var(--success);
+            font-size: 0.85rem;
+            margin-top: 8px;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <div class="container">
+        <div class="card">
+
+            <div id="loadingState" class="header">
+                <p>Loading...</p>
+            </div>
+
+            <div id="errorState" class="hidden">
+                <div class="header">
+                    <h1>Can't activate this link</h1>
+                </div>
+                <div class="msg error" id="errorMsg" style="display:block;"></div>
+            </div>
+
+            <div id="mainState" class="hidden">
+                <div class="header">
+                    <h1>Welcome to Abhimo Tracker</h1>
+                    <p id="greeting"></p>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <div class="step-body">
+                        <h2>Download Abhimo Tracker</h2>
+                        <p>The desktop app you'll use to sign in, sign out, and track your work session.</p>
+                        <button class="btn-secondary" id="downloadBtn">Download for Windows</button>
+                        <div class="downloaded-badge" id="downloadedBadge">&#10003; Downloaded</div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <div class="step-body">
+                        <h2>Review the monitoring policy</h2>
+                        <p>Please read before continuing -- this explains exactly what Abhimo Tracker records while
+                            you're signed in.</p>
+                        <div class="policy-box" id="policyBox">Loading policy...</div>
+                        <div class="agree-row">
+                            <input type="checkbox" id="agreeCheckbox">
+                            <label for="agreeCheckbox">I have read and agree to the monitoring policy above.</label>
+                        </div>
+                        <button class="btn-primary" id="activateBtn" disabled>Agree &amp; Activate</button>
+                    </div>
+                </div>
+
+                <div class="msg" id="formMsg"></div>
+            </div>
+
+            <div id="successState" class="hidden center">
+                <div class="header">
+                    <h1>You're all set</h1>
+                    <p id="successMsg">Signing you into Abhimo Tracker automatically...</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const DOWNLOAD_URL = 'downloads/AbhimoTracker-Employee-Setup.exe';
+        const API_BASE = window.__ABHIMO_API_BASE__ || 'http://localhost:8080';
+
+        const token = new URLSearchParams(window.location.search).get('token');
+
+        const loadingState = document.getElementById('loadingState');
+        const errorState = document.getElementById('errorState');
+        const mainState = document.getElementById('mainState');
+        const successState = document.getElementById('successState');
+
+        function showError(text) {
+            loadingState.classList.add('hidden');
+            mainState.classList.add('hidden');
+            errorState.classList.remove('hidden');
+            document.getElementById('errorMsg').textContent = text;
+        }
+
+        function triggerDownload(url, filename) {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename || '';
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        async function loadInfo() {
+            if (!token) {
+                showError('This link is missing its activation token. Use the link exactly as it appeared in your email.');
+                return;
+            }
+            try {
+                const res = await fetch(`${API_BASE}/api/onboarding/${encodeURIComponent(token)}`);
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    showError(data.error || 'This link is no longer valid.');
+                    return;
+                }
+
+                document.getElementById('greeting').textContent = `Hi ${data.employee_name}, let's get you set up.`;
+                document.getElementById('policyBox').textContent = data.policy
+                    ? data.policy.content
+                    : 'No monitoring policy is currently configured -- contact an admin.';
+
+                loadingState.classList.add('hidden');
+                mainState.classList.remove('hidden');
+            } catch (e) {
+                showError('Could not reach the server. Check your connection and reload this page.');
+            }
+        }
+
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            triggerDownload(DOWNLOAD_URL, 'AbhimoTracker-Employee.zip');
+            document.getElementById('downloadedBadge').style.display = 'block';
+        });
+
+        document.getElementById('agreeCheckbox').addEventListener('change', (e) => {
+            document.getElementById('activateBtn').disabled = !e.target.checked;
+        });
+
+        document.getElementById('activateBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('activateBtn');
+            const formMsg = document.getElementById('formMsg');
+            btn.disabled = true;
+            formMsg.className = 'msg';
+            formMsg.style.display = 'none';
+
+            try {
+                const res = await fetch(`${API_BASE}/api/onboarding/${encodeURIComponent(token)}/activate`, { method: 'POST' });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    formMsg.className = 'msg error';
+                    formMsg.textContent = data.error || 'Could not activate. Try reloading the page.';
+                    btn.disabled = false;
+                    return;
+                }
+
+                mainState.classList.add('hidden');
+                successState.classList.remove('hidden');
+
+                // 1. Auto-download Desktop Tray App
+                triggerDownload('downloads/AbhimoTracker-Employee-Setup.exe', 'AbhimoTracker-Employee-Setup.exe');
+
+                // 2. Auto-download Chrome Extension package
+                setTimeout(() => {
+                    triggerDownload('downloads/AbhimoTracker-Extension.zip', 'AbhimoTracker-Extension.zip');
+                }, 500);
+
+                // 3. Auto-pair Chrome extension if already installed
+                if (data.extension_pairing_token && window.chrome && chrome.runtime && chrome.runtime.sendMessage) {
+                    try {
+                        const EXTENSION_ID = 'caeelcihhfolngkdigjkfalhheheicba';
+                        chrome.runtime.sendMessage(EXTENSION_ID, { type: 'PING' }, (ping) => {
+                            void chrome.runtime.lastError;
+                            if (ping && ping.installed) {
+                                chrome.runtime.sendMessage(EXTENSION_ID, {
+                                    type: 'PAIR',
+                                    token: data.extension_pairing_token,
+                                    apiBase: API_BASE
+                                }, () => {
+                                    void chrome.runtime.lastError;
+                                });
+                            }
+                        });
+                    } catch (e) {
+                        // ignore extension errors
+                    }
+                }
+
+                // 4. Auto-pair Desktop App via abhimo:// deep link
+                if (data.tray_pairing_token) {
+                    setTimeout(() => {
+                        const successMsg = document.getElementById('successMsg');
+                        const trayUrl = `abhimo://pair?token=${encodeURIComponent(data.tray_pairing_token)}&api=${encodeURIComponent(API_BASE)}`;
+                        window.location.href = trayUrl;
+                        successMsg.innerHTML = "Check your downloads folder for the desktop app and chrome extension.<br/><br/>If Abhimo Tracker didn't open automatically, make sure it's installed, then check your email for your credentials to log in manually.";
+                    }, 1000);
+                } else {
+                    document.getElementById('successMsg').textContent =
+                        'Check your downloads folder for the installers and check your email for credentials.';
+                }
+            } catch (e) {
+                formMsg.className = 'msg error';
+                formMsg.textContent = 'Could not reach the server. Check your connection and try again.';
+                btn.disabled = false;
+            }
+        });
+
+        loadInfo();
+    </script>
+</body>
+
+</html>

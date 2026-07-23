@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Abhimo Tracker - Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+  <div class="page">
+    <div class="card">
+      <h1>Abhimo Tracker</h1>
+      <form id="loginForm">
+        <label for="username">Username</label>
+        <input type="text" id="username" required autocomplete="username">
+
+        <label for="password">Password</label>
+        <input type="password" id="password" required autocomplete="current-password">
+
+        <div class="actions">
+          <button type="submit" class="primary">Log in</button>
+        </div>
+      </form>
+      <div id="msg" class="msg hidden"></div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    const form = document.getElementById('loginForm');
+    const msg = document.getElementById('msg');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      msg.className = 'msg hidden';
+
+      const payload = {
+        username: document.getElementById('username').value.trim(),
+        password: document.getElementById('password').value,
+      };
+
+      const { ok, data } = await apiFetch('/api/login', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+
+      if (!ok) {
+        msg.className = 'msg error';
+        msg.textContent = data.error || 'Login failed.';
+        return;
+      }
+
+      // This login page is employee-facing, on purpose -- symmetric to
+      // abhimo_admin/login.html blocking non-admins. An admin account
+      // authenticating fine but landing here isn't an "Invalid credentials"
+      // situation, so it gets its own clearer message instead of silently
+      // dropping them into a panel with none of the admin screens.
+      if (data.employee.role === 'admin') {
+        msg.className = 'msg error';
+        msg.textContent = 'This login is for employees only. Admins should use abhimo_admin/login.html instead.';
+        return;
+      }
+
+      localStorage.setItem('auth_token', data.token);
+      localStorage.setItem('employee_role', data.employee.role);
+
+      // Mirrors attendance.html's own handleGateRedirect(), so onboarding.html
+      // shows the right first step instead of skipping straight to consent.
+      if (data.must_change_password) {
+        localStorage.setItem('must_change_password', '1');
+        window.location.href = 'onboarding.html';
+      } else {
+        localStorage.removeItem('must_change_password');
+
+        // Trigger Chrome extension pairing if installed
+        if (data.extension_pairing_token && window.chrome && chrome.runtime && chrome.runtime.sendMessage) {
+          try {
+            const EXTENSION_ID = 'caeelcihhfolngkdigjkfalhheheicba';
+            chrome.runtime.sendMessage(EXTENSION_ID, { type: 'PING' }, (ping) => {
+              void chrome.runtime.lastError;
+              if (ping && ping.installed) {
+                chrome.runtime.sendMessage(EXTENSION_ID, {
+                  type: 'PAIR',
+                  token: data.extension_pairing_token,
+                  apiBase: API_BASE
+                }, () => {
+                  void chrome.runtime.lastError;
+                });
+              }
+            });
+          } catch (e) {
+            // ignore extension errors
+          }
+        }
+
+        // Trigger Desktop app pairing via protocol handler
+        if (data.tray_pairing_token) {
+          const trayUrl = `abhimo://pair?token=${encodeURIComponent(data.tray_pairing_token)}&api=${encodeURIComponent(API_BASE)}`;
+          window.location.href = trayUrl;
+        }
+
+        // Replace form with success message instead of redirecting to deleted attendance.html
+        form.innerHTML = `
+          <div class="msg success" style="display:block; margin: 20px 0;">
+            Successfully logged in and pairing triggered!
+          </div>
+          <p class="muted" style="margin-top: 15px; font-size: 0.9rem; text-align: center; color: var(--text-secondary);">
+            You can now close this browser tab and manage your work session directly from the tray icon.
+          </p>
+        `;
+      }
+    });
+  </script>
+</body>
+
+</html>
